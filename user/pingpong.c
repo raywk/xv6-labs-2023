@@ -11,8 +11,6 @@ main(int argc, char *argv[])
     pipe(p1);
     pipe(p2);
 
-    write(p1[1], "Ping!\n", 8);
-
     if (fork() == 0) {
         close(p1[1]);
         close(p2[0]);
@@ -26,7 +24,7 @@ main(int argc, char *argv[])
     } else {
         close(p1[0]);
         close(p2[1]);
-        wait((int *)0);
+        write(p1[1], "Ping!\n", 8);
         if (read(p2[0], buf, 8) > 0) {
             pid = getpid();
             printf("%d: received pong\n", pid);
