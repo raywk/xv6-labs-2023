@@ -24,7 +24,7 @@ main(int argc, char *argv[])
     } else {
         close(p1[0]);
         close(p2[1]);
-        write(p1[1], "Ping!\n", 8);
+        write(p1[1], "p", 8);
         if (read(p2[0], buf, 8) > 0) {
             pid = getpid();
             printf("%d: received pong\n", pid);
