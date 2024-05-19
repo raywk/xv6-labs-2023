@@ -450,15 +450,10 @@ copyinstr(pagetable_t pagetable, char *dst, uint64 srcva, uint64 max)
   }
 }
 
-// Print a page table.
+// Helper function for vmprint.
 void
-vmprint(pagetable_t pagetable, int level)
+vmprint_helper(pagetable_t pagetable, int level)
 {
-  // the initial page table will be printed.
-  if (level == 0) {
-    printf("page table %p\n", pagetable);
-  }
-  // there are 2^9 = 512 PTEs in a page table.
   for(int i = 0; i < 512; i++){
     pte_t pte = pagetable[i];
     if (pte & PTE_V) {
@@ -469,8 +464,16 @@ vmprint(pagetable_t pagetable, int level)
       // this PTE points to a lower-level page table.
       if ((pte & (PTE_R|PTE_W|PTE_X)) == 0) {
         uint64 child = PTE2PA(pte);
-        vmprint((pagetable_t)child, level+1);
+        vmprint_helper((pagetable_t)child, level+1);
       }
     }
   }
+}
+
+// Print a page table.
+void
+vmprint(pagetable_t pagetable)
+{
+  printf("page table %p\n", pagetable);
+  vmprint_helper(pagetable, 0);
 }

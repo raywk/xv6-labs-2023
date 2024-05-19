@@ -75,6 +75,28 @@ int
 sys_pgaccess(void)
 {
   // lab pgtbl: your code here.
+  uint64 base;
+  uint64 mask;
+  int len;
+
+  argaddr(0, &base);
+  argint(1, &len);
+  argaddr(2, &mask);
+  
+  // set upper bound to be 32 pages (32 bits).
+  unsigned int bitmask = 0;
+  pagetable_t pagetable = myproc()->pagetable;
+  pte_t* pte;
+  for(int i = 0; i < len; i++) {
+    pte = walk(pagetable, base + (i << PGSHIFT), 0);
+    if(*pte & PTE_A) {
+      bitmask |= (1 << i);
+      *pte &= ~PTE_A;
+    }
+  }
+  if (copyout(pagetable, mask, (char *)&bitmask, sizeof(unsigned int)) < 0) {
+    return -1;
+  }
   return 0;
 }
 #endif
