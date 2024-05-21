@@ -140,6 +140,12 @@ found:
     return 0;
   }
 
+  // Set up ticks.
+  p->ticks = 0;
+  p->tlast = 0;
+  p->handler = 0;
+  p->alarmframe = 0;
+
   // Set up new context to start executing at forkret,
   // which returns to user space.
   memset(&p->context, 0, sizeof(p->context));
@@ -169,6 +175,13 @@ freeproc(struct proc *p)
   p->killed = 0;
   p->xstate = 0;
   p->state = UNUSED;
+  p->tlast = 0;
+  p->ticks = 0;
+  p->handler = 0;
+  if (p->alarmframe) {
+    kfree((void *)p->alarmframe);
+  }
+  p->alarmframe = 0;
 }
 
 // Create a user page table for a given process, with no user memory,
