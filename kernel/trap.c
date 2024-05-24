@@ -29,6 +29,46 @@ trapinithart(void)
   w_stvec((uint64)kernelvec);
 }
 
+int
+cowfault(pagetable_t pagetable, uint64 va)
+{
+  if(va >= MAXVA)
+      return -1;
+
+  pte_t *pte = walk(pagetable, va, 0);
+  uint flags;
+
+  if (pte == 0 || (*pte & PTE_COW) == 0) {
+    return -1;
+  }
+
+  flags = PTE_FLAGS(*pte);
+
+  uint64 pa1 = PTE2PA(*pte);
+
+  int refcount = getref(pa1);
+  if (refcount == 1) {
+    *pte |= PTE_W;
+    *pte &= ~PTE_COW;
+    return 0;
+  }
+
+
+  uint64 pa2 = (uint64)kalloc();
+  if (pa2 == 0) {
+    printf("cow kalloc failed.\n");
+    return -1;
+  }
+
+  memmove((void *)pa2, (void *)pa1, PGSIZE);
+
+  kfree((void *)pa1);
+
+  *pte = PA2PTE(pa2) | flags | PTE_W;
+
+  return 0;
+}
+
 //
 // handle an interrupt, exception, or system call from user space.
 // called from trampoline.S
@@ -66,7 +106,11 @@ usertrap(void)
 
     syscall();
   } else if((which_dev = devintr()) != 0){
-    // ok
+    // ok 
+  } else if (r_scause() == 0xf) {
+    if (cowfault(p->pagetable, r_stval()) != 0) {
+      p->killed = 1;
+    }
   } else {
     printf("usertrap(): unexpected scause %p pid=%d\n", r_scause(), p->pid);
     printf("            sepc=%p stval=%p\n", r_sepc(), r_stval());

@@ -86,11 +86,13 @@ copyout(char *s)
       printf("open(README) failed\n");
       exit(1);
     }
+    printf("addr %p: open(README) -> fd: %d pass\n", addr, fd);
     int n = read(fd, (void*)addr, 8192);
     if(n > 0){
       printf("read(fd, %p, 8192) returned %d, not -1 or 0\n", addr, n);
       exit(1);
     }
+    printf("addr %p: read(fd) pass\n", addr);
     close(fd);
 
     int fds[2];
@@ -98,16 +100,19 @@ copyout(char *s)
       printf("pipe() failed\n");
       exit(1);
     }
+    printf("addr %p: pipe(fds) pass\n", addr);
     n = write(fds[1], "x", 1);
     if(n != 1){
       printf("pipe write failed\n");
       exit(1);
     }
+    printf("addr %p: write(fds[1]) pass\n", addr);
     n = read(fds[0], (void*)addr, 8192);
     if(n > 0){
       printf("read(pipe, %p, 8192) returned %d, not -1 or 0\n", addr, n);
       exit(1);
     }
+    printf("addr %p: read(fds[0]) pass\n", addr);
     close(fds[0]);
     close(fds[1]);
   }
