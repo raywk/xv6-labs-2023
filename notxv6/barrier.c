@@ -34,12 +34,11 @@ barrier()
   bstate.nthread++;
   if (bstate.nthread == nthread) {
     bstate.round++;
-    pthread_cond_broadcast(&bstate.barrier_cond);
-    pthread_mutex_unlock(&bstate.barrier_mutex);
     bstate.nthread = 0;
-    return;
+    pthread_cond_broadcast(&bstate.barrier_cond);
+  } else {
+    pthread_cond_wait(&bstate.barrier_cond, &bstate.barrier_mutex);
   }
-  pthread_cond_wait(&bstate.barrier_cond, &bstate.barrier_mutex);
   pthread_mutex_unlock(&bstate.barrier_mutex);
 }
 
